@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════════
+# Ruty — .gitignore
+# ═══════════════════════════════════════════════════════════════
+
+# ─── Misceláneos ───
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ─── IntelliJ / Android Studio ───
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# ─── VSCode (descomentar si quieres ignorarlo) ───
+#.vscode/
+
+# ─── Flutter / Dart / Pub ───
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# ─── Símbolos y ofuscación ───
+app.*.symbols
+app.*.map.json
+
+# ─── Android Studio build artifacts ───
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ─── Widget Preview ───
+.widget_preview/
+
+# ═══════════════════════════════════════════════════════════════
+# SEGURIDAD — NUNCA SUBIR ESTOS ARCHIVOS
+# ═══════════════════════════════════════════════════════════════
+
+# Credenciales de firma
+android/key.properties
+android/app/upload-keystore.jks
+*.jks
+*.keystore
+
+# ═══════════════════════════════════════════════════════════════
+# CONFIGURACIÓN LOCAL DEL DESARROLLADOR
+# ═══════════════════════════════════════════════════════════════
+
+# Rutas locales de tu PC (SDK de Android, Flutter, etc.)
+android/local.properties
+local.properties
+
+# ═══════════════════════════════════════════════════════════════
+# CACHÉ DE GRADLE Y BUILD
+# ═══════════════════════════════════════════════════════════════
+
+android/.gradle/
+.gradle/
+
+# Build artifacts (Android)
+android/build/
+android/app/build/
+android/captures/
+
+# Build artifacts (iOS)
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+
+# Build artifacts (web)
+web/build/
+
+# Build artifacts (windows/macos/linux)
+windows/build/
+macos/build/
+linux/build/
