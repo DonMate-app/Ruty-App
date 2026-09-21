@@ -8,10 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/update_info.dart';
 
 class UpdateService {
-  /// ⚠️ CAMBIA 'DonMate' por tu usuario real de GitHub cuando crees el repo.
-  /// El repositorio debe llamarse 'Ruty-App'.
+  /// URL del version.json en el repo oficial de Ruty.
   static const String _urlVersionJson =
-      'https://raw.githubusercontent.com/DonMate/Ruty-App/main/version.json';
+      'https://raw.githubusercontent.com/DonMate-app/Ruty-App/main/version.json';
 
   /// Intervalo mínimo entre comprobaciones automáticas.
   static const Duration _intervaloChequeo = Duration(hours: 6);

@@ -1,0 +1,14 @@
+{
+  "version": "1.0.2",
+  "versionCode": 3,
+  "url": "https://github.com/DonMate-app/Ruty-App/releases/download/v1.0.2/app-release.apk",
+  "cambios": [
+    "Sistema de metas, XP, niveles e insignias",
+    "Celebraciones globales con confetti y sonido",
+    "Nivel, racha e insignias reflejados en tu perfil",
+    "Recálculo automático de metas al registrar actividades",
+    "Correcciones menores y mejoras de rendimiento"
+  ],
+  "obligatoria": false,
+  "minVersionCode": 1
+}
