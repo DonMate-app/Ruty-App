@@ -77,7 +77,7 @@ class VistaAjustesPage extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'Horario App',
+              'Ruty',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

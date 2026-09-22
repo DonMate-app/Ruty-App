@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/estado_pro_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/precios_service.dart';
 import '../../widgets/pro_dialog.dart';
 
 class InfoProPage extends StatelessWidget {
@@ -14,6 +16,10 @@ class InfoProPage extends StatelessWidget {
     final themeProv = context.watch<ThemeProvider>();
     final estado = context.watch<EstadoProProvider>();
     final fontFamily = themeProv.fontFamily;
+
+    // Detectar región y precio
+    final region = PreciosService.detectar();
+    final precioTexto = region.etiquetaPrecio;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Horario Pro')),
@@ -96,7 +102,7 @@ class InfoProPage extends StatelessWidget {
           _funcion(
             context,
             icono: Icons.emoji_events,
-            titulo: 'Próximamente: Metas y logros',
+            titulo: 'Metas y logros',
             descripcion:
                 'Sistema de XP, insignias y niveles para gamificar tus '
                 'hábitos saludables.',
@@ -183,19 +189,25 @@ class InfoProPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+
+            // ── Precio regional + Comprar Pro ──
+            _tarjetaPrecio(context, region, fontFamily),
+            const SizedBox(height: 12),
+
             SizedBox(
               width: double.infinity,
               height: 52,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Próximamente: enlace de compra'),
-                    ),
-                  );
-                },
+                onPressed: () => _abrirCheckout(context, region),
                 icon: const Icon(Icons.shopping_cart_outlined),
-                label: const Text('Comprar Pro'),
+                label: Text(
+                  'Comprar Pro — $precioTexto',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: fontFamily,
+                  ),
+                ),
               ),
             ),
           ],
@@ -216,6 +228,104 @@ class InfoProPage extends StatelessWidget {
       ),
     );
   }
+
+  // ──────────────────────────────────────────────────────────
+  // Tarjeta de precio regional
+  // ──────────────────────────────────────────────────────────
+
+  Widget _tarjetaPrecio(
+    BuildContext context,
+    RegionPrecio region,
+    String fontFamily,
+  ) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.local_offer_outlined,
+            color: theme.colorScheme.primary,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Precio para ${region.nombre}',
+                  style: TextStyle(
+                    fontFamily: fontFamily,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  region.etiquetaPrecio,
+                  style: TextStyle(
+                    fontFamily: fontFamily,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // Abrir checkout de Lemon Squeezy
+  // ──────────────────────────────────────────────────────────
+
+  Future<void> _abrirCheckout(
+    BuildContext context,
+    RegionPrecio region,
+  ) async {
+    final url = PreciosService.urlCheckout(region);
+
+    if (url == null) {
+      // Aún no configurado — placeholder
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Próximamente: compra disponible para ${region.nombre} '
+            '(${region.etiquetaPrecio})',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir el enlace de compra'),
+        ),
+      );
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // Helpers
+  // ──────────────────────────────────────────────────────────
 
   Widget _titulo(
     BuildContext context,

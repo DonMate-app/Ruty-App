@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LicenciaService {
@@ -9,15 +11,70 @@ class LicenciaService {
   static const String _prefFechaActivacion = 'licencia_fecha_activacion';
   static const String _prefCodigosQuemados = 'licencia_codigos_quemados';
 
-  /// Secreto interno para el checksum.
-  /// ⚠️ Cambia este string si quieres regenerar todos los códigos.
   static const String _secreto = 'DONMATE_HORARIO_2026_SECRET_v1';
-
   static const String _prefijo = 'HOR';
 
-  // ──────────────────────────────────────────────────────────
-  // GENERACIÓN (solo para el desarrollador)
-  // ──────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+  // LEMON SQUEEZY (Fase 17.4 — PLACEHOLDER)
+  // ═══════════════════════════════════════════════════════════
+
+  /// TODO 17.4: poner en `true` cuando el co-dev cree la cuenta
+  /// de Lemon Squeezy y se configuren la API key y las URLs.
+  static const bool _lemonSqueezyConfigurado = false;
+
+  /// URL de validación de licencias de Lemon Squeezy.
+  static const String _urlValidacionLemonSqueezy =
+      'https://api.lemonsqueezy.com/v1/licenses/validate';
+
+  /// TODO 17.4: API key de DonMate en Lemon Squeezy.
+  static const String _apiKeyLemonSqueezy = 'PLACEHOLDER_API_KEY';
+
+  /// ¿El código tiene formato de Lemon Squeezy? (XXXX-XXXX-XXXX-XXXX)
+  static bool esCodigoLemonSqueezy(String codigo) {
+    final regex = RegExp(r'^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$');
+    return regex.hasMatch(codigo.trim().toUpperCase());
+  }
+
+  /// Valida online contra Lemon Squeezy.
+  /// Devuelve `null` si no se pudo consultar (sin configurar, sin red, error).
+  static Future<ResultadoActivacion?> _validarOnlineLemonSqueezy(
+    String codigo,
+  ) async {
+    if (!_lemonSqueezyConfigurado) {
+      debugPrint('🔐 [Licencia] Lemon Squeezy aún no configurado');
+      return null;
+    }
+    try {
+      final response = await http.post(
+        Uri.parse(_urlValidacionLemonSqueezy),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer $_apiKeyLemonSqueezy',
+        },
+        body: {'license_key': codigo},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200) {
+        debugPrint('🔐 [Licencia] HTTP ${response.statusCode}');
+        return null;
+      }
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['valid'] == true) {
+        return ResultadoActivacion.exito();
+      }
+      final error = json['error'] as String? ?? 'Licencia inválida';
+      return ResultadoActivacion.error(error);
+    } catch (e) {
+      debugPrint('🔐 [Licencia] Error online: $e');
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // GENERACIÓN OFFLINE (solo para el desarrollador)
+  // ═══════════════════════════════════════════════════════════
 
   static String generarCodigo(int seed) {
     final data = '$seed:$_secreto';
@@ -37,9 +94,9 @@ class LicenciaService {
     return hash.substring(0, 2);
   }
 
-  // ──────────────────────────────────────────────────────────
-  // VALIDACIÓN
-  // ──────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+  // VALIDACIÓN OFFLINE
+  // ═══════════════════════════════════════════════════════════
 
   static bool validarFormato(String codigo) {
     final codigoLimpio = codigo.trim().toUpperCase();
@@ -55,9 +112,9 @@ class LicenciaService {
     return cc == ccEsperado;
   }
 
-  // ──────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
   // ACTIVACIÓN
-  // ──────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
 
   static Future<ResultadoActivacion> activar(String codigo) async {
     final codigoLimpio = codigo.trim().toUpperCase();
@@ -66,6 +123,21 @@ class LicenciaService {
       return ResultadoActivacion.error('Escribe un código');
     }
 
+    // 1) Formato Lemon Squeezy → validar online
+    if (esCodigoLemonSqueezy(codigoLimpio)) {
+      final resultadoOnline = await _validarOnlineLemonSqueezy(codigoLimpio);
+      if (resultadoOnline != null) {
+        if (resultadoOnline.exitoso) {
+          await _guardarActivacion(codigoLimpio, quemar: false);
+        }
+        return resultadoOnline;
+      }
+      return ResultadoActivacion.error(
+        'No se pudo validar el código. Verifica tu conexión.',
+      );
+    }
+
+    // 2) Formato offline (HOR-XXXX-XXXX-XX) → validar checksum
     if (!validarFormato(codigoLimpio)) {
       return ResultadoActivacion.error(
         'Código inválido. Verifica que esté bien escrito.',
@@ -73,7 +145,6 @@ class LicenciaService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-
     final codigosQuemados =
         prefs.getStringList(_prefCodigosQuemados) ?? <String>[];
     if (codigosQuemados.contains(codigoLimpio)) {
@@ -82,17 +153,30 @@ class LicenciaService {
       );
     }
 
+    await _guardarActivacion(codigoLimpio, quemar: true);
+    return ResultadoActivacion.exito();
+  }
+
+  static Future<void> _guardarActivacion(
+    String codigo, {
+    required bool quemar,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefActivada, true);
-    await prefs.setString(_prefCodigoUsado, codigoLimpio);
+    await prefs.setString(_prefCodigoUsado, codigo);
     await prefs.setString(
       _prefFechaActivacion,
       DateTime.now().toIso8601String(),
     );
 
-    codigosQuemados.add(codigoLimpio);
-    await prefs.setStringList(_prefCodigosQuemados, codigosQuemados);
-
-    return ResultadoActivacion.exito();
+    if (quemar) {
+      final codigosQuemados =
+          prefs.getStringList(_prefCodigosQuemados) ?? <String>[];
+      if (!codigosQuemados.contains(codigo)) {
+        codigosQuemados.add(codigo);
+        await prefs.setStringList(_prefCodigosQuemados, codigosQuemados);
+      }
+    }
   }
 
   static Future<bool> estaActivada() async {

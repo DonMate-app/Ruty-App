@@ -56,15 +56,23 @@ class _AcercaDePageState extends State<AcercaDePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Horario App',
+                    'Ruty',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Rutina y Organización',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   Text(
                     'v$_version (build $_buildNumber)',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -86,13 +94,13 @@ class _AcercaDePageState extends State<AcercaDePage> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Horario App es una aplicación de gestión de tiempo y '
-                      'hábitos que te permite organizar eventos, rutinas, '
-                      'tareas, alimentación, ejercicio y medicación de forma '
-                      'intuitiva y personalizable.\n\n'
+                      'Ruty es una aplicación de gestión de tiempo y hábitos '
+                      'que te permite organizar eventos, rutinas, tareas, '
+                      'alimentación, ejercicio y medicación de forma intuitiva '
+                      'y personalizable.\n\n'
                       'Diseñada para ayudarte a mantener una vida más '
-                      'saludable y productiva, con recordatorios, estadísticas '
-                      'y recomendaciones personalizadas.',
+                      'saludable y productiva, con recordatorios, estadísticas, '
+                      'metas y recomendaciones personalizadas.',
                     ),
                   ],
                 ),
@@ -139,15 +147,15 @@ class _AcercaDePageState extends State<AcercaDePage> {
                     const SizedBox(height: 8),
                     const ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.person),
-                      title: Text('Leonard Vera'),
-                      subtitle: Text('DonMate'),
+                      leading: Icon(Icons.business),
+                      title: Text('DonMate'),
+                      subtitle: Text('Leonard Vera · Sebastián Marín'),
                     ),
                     const ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(Icons.email),
                       title: Text('Contacto'),
-                      subtitle: Text('correo@ejemplo.com'),
+                      subtitle: Text('donmate.apps@gmail.com'),
                     ),
                   ],
                 ),
